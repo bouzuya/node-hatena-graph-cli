@@ -1,10 +1,13 @@
 {
   "name": "hatena-graph-cli",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Hatena::Graph command line interface (unofficial).",
   "repository": {
     "type": "git",
     "url": "git://github.com/bouzuya/node-hatena-graph-cli.git"
+  },
+  "bin": {
+    "hatena-graph": "./bin/hatena-graph"
   },
   "keywords": [
     "hatena",
