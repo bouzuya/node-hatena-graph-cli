@@ -6,6 +6,9 @@
     "type": "git",
     "url": "git://github.com/bouzuya/node-hatena-graph-cli.git"
   },
+  "bin": {
+    "hatena-graph": "./bin/hatena-graph"
+  },
   "keywords": [
     "hatena",
     "hatena-graph"
