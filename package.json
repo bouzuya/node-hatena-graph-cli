@@ -1,0 +1,23 @@
+{
+  "name": "hatena-graph-cli",
+  "version": "0.0.0",
+  "description": "A Hatena::Graph command line interface (unofficial).",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/bouzuya/node-hatena-graph-cli.git"
+  },
+  "keywords": [
+    "hatena"
+  ],
+  "author": "bouzuya",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bouzuya/node-hatena-graph-cli/issues"
+  },
+  "homepage": "https://github.com/bouzuya/node-hatena-graph-cli",
+  "dependencies": {
+    "commander": "~2.1.0",
+    "hatena-graph-api": "0.0.1"
+  }
+}

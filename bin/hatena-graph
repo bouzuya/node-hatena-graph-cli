@@ -1,0 +1,36 @@
+#!/usr/bin/env node
+
+var fs = require('fs');
+var commander = require('commander');
+var hatenaGraphApi = require('hatena-graph-api');
+
+commander.version(JSON.parse(fs.readFileSync('package.json')).version);
+
+commander
+.command('get-data <graphname>')
+.description('get graph data')
+.option('-d, --date <yyyy-mm-dd>', 'target date')
+.action(function(graphname, options) {
+  if (options.date && !/^\d{4}-\d{2}(-\d{2})?$/.test(options.date)) {
+    console.error('  error: date format is invalid');
+    process.exit(1);
+  }
+
+  var graph = hatenaGraphApi(process.env.HATENA_USERNAME, process.env.HATENA_APIKEY);
+  graph.getData(graphname, function(err, data) {
+    if (err) {
+      console.error(err);
+      process.exit(1);
+    }
+
+    var datePattern = new RegExp('^' + (options.date ? options.date : '.*$'));
+    Object.keys(data).filter(function(key) {
+      return datePattern.test(key);
+    }).sort().forEach(function(key) {
+      console.log(key + ' ' + data[key]);
+    });
+  });
+});
+
+commander.parse(process.argv);
+
