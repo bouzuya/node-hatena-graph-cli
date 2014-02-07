@@ -18,6 +18,7 @@
   "homepage": "https://github.com/bouzuya/node-hatena-graph-cli",
   "dependencies": {
     "commander": "~2.1.0",
-    "hatena-graph-api": "0.0.1"
+    "hatena-graph-api": "0.0.1",
+    "moment": "~2.5.1"
   }
 }
