@@ -1,7 +1,7 @@
 {
   "name": "hatena-graph-cli",
-  "version": "0.0.0",
-  "description": "A Hatena::Graph command line interface (unofficial).",
+  "version": "0.0.1",
+  "description": "Hatena::Graph command line interface (unofficial).",
   "main": "index.js",
   "repository": {
     "type": "git",
