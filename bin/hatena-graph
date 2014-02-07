@@ -78,6 +78,32 @@ commander
   });
 });
 
+commander
+.command('post-config <graphname> <parameter> <value>')
+.description('post graph config')
+.action(function(graphname, parameter, value, options) {
+  var graph = hatenaGraphApi(process.env.HATENA_USERNAME, process.env.HATENA_APIKEY);
+  graph.getConfig(graphname, function(err, data) {
+    if (err) {
+      console.error(err);
+      process.exit(1);
+    }
+
+    data['graphname'] = graphname;
+    data[parameter] = value;
+
+    graph.postConfig(data, function(err, data) {
+      if (err) {
+        console.error(err);
+        process.exit(1);
+      }
+
+      console.log(parameter + ' ' + value);
+    });
+  });
+
+});
+
 
 commander.parse(process.argv);
 
