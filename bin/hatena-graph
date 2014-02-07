@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 var fs = require('fs');
+var moment = require('moment');
 var commander = require('commander');
 var hatenaGraphApi = require('hatena-graph-api');
 
@@ -31,6 +32,78 @@ commander
     });
   });
 });
+
+commander
+.command('post-data <graphname> <value>')
+.description('post graph data')
+.option('-d, --date <yyyy-mm-dd>', 'target date')
+.action(function(graphname, value, options) {
+  var date = options.date || moment().format('YYYY-MM-DD');
+  if (!/^\d{4}-\d{2}-\d{2}?$/.test(date)) {
+    console.error('  error: date format is invalid');
+    process.exit(1);
+  }
+
+  var graph = hatenaGraphApi(process.env.HATENA_USERNAME, process.env.HATENA_APIKEY);
+  graph.postData(graphname, date, value, function(err, data) {
+    if (err) {
+      console.error(err);
+      process.exit(1);
+    }
+
+    console.log(date + ' ' + value);
+  });
+});
+
+commander
+.command('get-config <graphname>')
+.description('get graph config')
+.option('-p, --parameter <name>', 'target parameter')
+.action(function(graphname, options) {
+  var graph = hatenaGraphApi(process.env.HATENA_USERNAME, process.env.HATENA_APIKEY);
+  graph.getConfig(graphname, function(err, data) {
+    if (err) {
+      console.error(err);
+      process.exit(1);
+    }
+
+    var pattern = options.parameter
+      ? new RegExp('^' + options.parameter)
+      : new RegExp('^.*$');
+    Object.keys(data).filter(function(key) {
+      return pattern.test(key);
+    }).sort().forEach(function(key) {
+      console.log(key + ' ' + data[key]);
+    });
+  });
+});
+
+commander
+.command('post-config <graphname> <parameter> <value>')
+.description('post graph config')
+.action(function(graphname, parameter, value, options) {
+  var graph = hatenaGraphApi(process.env.HATENA_USERNAME, process.env.HATENA_APIKEY);
+  graph.getConfig(graphname, function(err, data) {
+    if (err) {
+      console.error(err);
+      process.exit(1);
+    }
+
+    data['graphname'] = graphname;
+    data[parameter] = value;
+
+    graph.postConfig(data, function(err, data) {
+      if (err) {
+        console.error(err);
+        process.exit(1);
+      }
+
+      console.log(parameter + ' ' + value);
+    });
+  });
+
+});
+
 
 commander.parse(process.argv);
 
