@@ -5,7 +5,7 @@ var moment = require('moment');
 var commander = require('commander');
 var hatenaGraphApi = require('hatena-graph-api');
 
-commander.version(JSON.parse(fs.readFileSync('package.json')).version);
+commander.version(JSON.parse(fs.readFileSync(__dirname + '/../package.json')).version);
 
 commander
 .command('get-data <graphname>')
