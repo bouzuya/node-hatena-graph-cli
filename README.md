@@ -16,8 +16,8 @@ Usage
     $ hatena-graph --help
     $
     $ # configure
-    $ export HATENA_USERNAME='xxx'
-    $ export HATENA_APIKEY='yyy'
+    $ export HATENA_USERNAME='your username'
+    $ export HATENA_APIKEY='your apikey'
     $
     $ # get graph data
     $ hatena-graph get-data graphname
@@ -50,3 +50,46 @@ Usage
     $ hatena-graph post-config graphname comment message
     comment message
     
+Configuration
+------------------------------------------------------------------------------
+
+authentication data priority
+
+1. command-line arguments
+2. authentication data file (~/.hatena-graph.json)
+3. environment variables
+
+### command-line arguments
+
+    $ hatena-graph \
+    > --username 'your username' \
+    > --apikey 'your apikey' \
+    > get-data graphname
+    2014-01-01 12.34
+    2014-01-02 56.78
+
+### file
+
+    $ # create authentication data file
+    $ username='your username'
+    $ apikey='your apikey'
+    $ hatena-graph create-authfile --username $username --apikey $apikey
+    create authentication data file : /home/user/.hatena-graph.json
+    $
+    $ hatena-graph get-data graphname
+    2014-01-01 12.34
+    2014-01-02 56.78
+    $
+    $ # delete authentication data file
+    $ hatena-graph delete-authfile
+    delete authentication data file : /home/user/.hatena-graph.json
+
+### environment variables
+
+    $ export HATENA_USERNAME='your username'
+    $ export HATENA_APIKEY='your apikey'
+    $
+    $ hatena-graph get-data graphname
+    2014-01-01 12.34
+    2014-01-02 56.78
+
