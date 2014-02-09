@@ -1,23 +1,128 @@
 #!/usr/bin/env node
 
 var fs = require('fs');
+var path = require('path');
+var q = require('q');
+var read = require('read');
 var moment = require('moment');
 var commander = require('commander');
 var hatenaGraphApi = require('hatena-graph-api');
 
-commander.version(JSON.parse(fs.readFileSync(__dirname + '/../package.json')).version);
+var authenticate = function(options) {
+  // from env
+  var username = process.env.HATENA_USERNAME;
+  var apikey = process.env.HATENA_APIKEY;
+
+  // from file
+  var file = path.join(process.env.HOME, '.hatena-graph.json');
+  if (fs.existsSync(file)) {
+    var auth = JSON.parse(fs.readFileSync(file));
+    username = auth.username ? auth.username : username;
+    apikey = auth.apikey ? auth.apikey : apikey;
+  }
+
+  // from options
+  username = options.parent.username ? options.parent.username : username;
+  apikey = options.parent.apikey ? options.parent.apikey : apikey;
+
+  if (!username || !apikey) {
+    console.error('  error: no authentication data');
+    process.exit(1);
+  }
+
+  return { username: username, apikey: apikey };
+};
+
+commander
+.version(JSON.parse(fs.readFileSync(__dirname + '/../package.json')).version)
+.option('-u, --username <username>', 'username')
+.option('-a, --apikey <apikey>', 'apikey');
+
+commander
+.command('create-authfile')
+.description('create authentication data file')
+.action(function(options) {
+  var readUsername = function(username) {
+    var deferred = q.defer();
+    if (username) {
+      deferred.resolve(username);
+    } else {
+      read({
+        prompt: 'username: ',
+        default: process.env.HATENA_USERNAME
+      }, function(err, username) {
+        if (err) {
+          deferred.reject(err);
+        } else {
+          deferred.resolve(username);
+        }
+      });
+    }
+    return deferred.promise;
+  };
+
+  var readApikey = function(apikey) {
+    var deferred = q.defer();
+    if (apikey) {
+      deferred.resolve(apikey);
+    } else {
+      read({
+        prompt: 'apikey: ',
+        default: process.env.HATENA_APIKEY,
+        silent: true
+      }, function(err, apikey) {
+        if (err) {
+          deferred.reject(err);
+        } else {
+          deferred.resolve(apikey);
+        }
+      });
+    }
+    return deferred.promise;
+  };
+
+  readUsername(options.parent.username).then(function(username) {
+    readApikey(options.parent.apikey).then(function(apikey) {
+      var json = JSON.stringify({ username: username, apikey: apikey });
+      var file = path.join(process.env.HOME, '.hatena-graph.json');
+      fs.writeFileSync(file, json);
+      console.log('create authentication data file : ' + file);
+    }).fail(function(err) {
+      // fail readApikey
+      console.error(err);
+      promise.exit(1);
+    });
+  }).fail(function(err) {
+    // fail readUsername
+    console.error(err);
+    promise.exit(1);
+  });
+});
+
+commander
+.command('delete-authfile')
+.description('delete authentication data file')
+.action(function(options) {
+  var file = path.join(process.env.HOME, '.hatena-graph.json');
+  if (fs.existsSync(file)) {
+    fs.unlinkSync(file);
+    console.log('delete authentication data file : ' + file);
+  }
+});
 
 commander
 .command('get-data <graphname>')
 .description('get graph data')
 .option('-d, --date <yyyy-mm-dd>', 'target date')
 .action(function(graphname, options) {
+  var auth = authenticate(options);
+
   if (options.date && !/^\d{4}-\d{2}(-\d{2})?$/.test(options.date)) {
     console.error('  error: date format is invalid');
     process.exit(1);
   }
 
-  var graph = hatenaGraphApi(process.env.HATENA_USERNAME, process.env.HATENA_APIKEY);
+  var graph = hatenaGraphApi(auth.username, auth.apikey);
   graph.getData(graphname, function(err, data) {
     if (err) {
       console.error(err);
@@ -38,13 +143,15 @@ commander
 .description('post graph data')
 .option('-d, --date <yyyy-mm-dd>', 'target date')
 .action(function(graphname, value, options) {
+  var auth = authenticate(options);
+
   var date = options.date || moment().format('YYYY-MM-DD');
   if (!/^\d{4}-\d{2}-\d{2}?$/.test(date)) {
     console.error('  error: date format is invalid');
     process.exit(1);
   }
 
-  var graph = hatenaGraphApi(process.env.HATENA_USERNAME, process.env.HATENA_APIKEY);
+  var graph = hatenaGraphApi(auth.username, auth.apikey);
   graph.postData(graphname, date, value, function(err, data) {
     if (err) {
       console.error(err);
@@ -60,7 +167,9 @@ commander
 .description('get graph config')
 .option('-p, --parameter <name>', 'target parameter')
 .action(function(graphname, options) {
-  var graph = hatenaGraphApi(process.env.HATENA_USERNAME, process.env.HATENA_APIKEY);
+  var auth = authenticate(options);
+
+  var graph = hatenaGraphApi(auth.username, auth.apikey);
   graph.getConfig(graphname, function(err, data) {
     if (err) {
       console.error(err);
@@ -70,11 +179,11 @@ commander
     var pattern = options.parameter
       ? new RegExp('^' + options.parameter)
       : new RegExp('^.*$');
-    Object.keys(data).filter(function(key) {
-      return pattern.test(key);
-    }).sort().forEach(function(key) {
-      console.log(key + ' ' + data[key]);
-    });
+      Object.keys(data).filter(function(key) {
+        return pattern.test(key);
+      }).sort().forEach(function(key) {
+        console.log(key + ' ' + data[key]);
+      });
   });
 });
 
@@ -82,7 +191,9 @@ commander
 .command('post-config <graphname> <parameter> <value>')
 .description('post graph config')
 .action(function(graphname, parameter, value, options) {
-  var graph = hatenaGraphApi(process.env.HATENA_USERNAME, process.env.HATENA_APIKEY);
+  var auth = authenticate(options);
+
+  var graph = hatenaGraphApi(auth.username, auth.apikey);
   graph.getConfig(graphname, function(err, data) {
     if (err) {
       console.error(err);
